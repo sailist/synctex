@@ -438,6 +438,7 @@ if __name__ == '__main__':
                 print("We've already compiled the .tex document, so there's nothing else to do.\n  Exiting..")
                 exitScript(returnCode)
 
+        compileTex() # compile twice for cross-ref item
 
         if options.remove_addtion:
             clear_addtion(texDoc)

@@ -86,11 +86,17 @@
           <button type="button" class="btn btn-success" id="btn-clear">清空</button>
 		  <button type="button" class="btn btn-success" id="btn">编译</button>
         </div>
-        
-        
+      </div>
+      <div class="row download-list">
+      	<!--<div class="line">
+      		<p>编译成功</p><p>p.pdf</p><button type="button" class="btn btn-success" id="btn-download" value="p.pdf">下载</button>
+      	</div>-->
+      	
       </div>
     </div>
   </header>
+
+
 
    <script type="text/javascript">
      //点击本地上传文件
@@ -123,20 +129,42 @@
 			
 		})
 		
-	 function check_compile_over(tid){
- 		$.ajax({
-		    url: "/check/${tid}",
+	
+
+	
+	function get_compile_flist(tid){
+		
+		$.ajax({
+		    url: "/update/"+tid,
 		    type: "GET",
 		    success: function(data) {
 		        console.log(data);
+		        pdfs = data["success"];
+		        errfs = data["failed"];
+		        for(s of pdfs){
+		        	append_download_file(s,true);
+		        }
+		        for(s of errfs){
+		        	append_download_file(s,false);
+		        }
+		        
+		        	$(".btn-download").click(function(e){
+						console.log(e);
+						console.log(this.value);
+						
+						$.ajax({
+							url:"/download/"+this.value,
+							type: "POST",
+						});
+					})
+		        
 		    }
 		});
-	 }
-	
+	}
      $('#btn').click( () => {
        
        	xhr = new XMLHttpRequest();
-	    xhr.open("post", "/", true);
+	    xhr.open("post", "/uploads", true);
 	    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 		
 		xhr.onreadystatechange = function () {
@@ -144,11 +172,25 @@
 	      		if(xhr.status === 200){ // 请求成功
 		        	console.log(xhr.response);
 		        	tid = xhr.response;
-		        	//查询编译是否完成
-		        	window.setInterval(function(){
-		        		check_compile_over(tid);
 		        	
-		        	},500);
+		        	
+	        		 function check_compile_over(){
+				 		$.ajax({
+						    url: "/check/"+tid,
+						    type: "GET",
+						    success: function(data) {
+						        console.log(data);
+						        if(data == "True"){
+						        	get_compile_flist(tid);
+						        	
+						        }else{
+								    setTimeout(check_compile_over,500);
+						        }
+						    }
+						});
+					 }
+		        	
+		        	window.setTimeout(check_compile_over,500);
 			      // console.log(JSON.parse(xhr.responseText));
 			      // console.log(xhr.upload);
 			      
@@ -203,23 +245,23 @@
 		
       function appendFile (file) {
       	let str = `<p>${file}</p>`;
-      	
       	$(".list-drag").append(str);
-//      for( file of files ) {
-//      	constfiles[constfiles.length] = file;
-//        let url = window.URL.createObjectURL(file);
-//        let liStr = `
-//          <li class="list-group-item">
-//            <div>
-//            	<p>"${file.name}"</p>
-//
-//            </div>
-//          </li>
-//        `;
-//        $(listName).append(liStr);
-//      }
+      }
+      
+      function append_download_file(file,type){
+      	k = file.split("/");
+      	fname = k[k.length-1];
+      	if(type == true){
+			let str = `<div><p>编译成功:${fname}</P><a href=/download/${file} class="btn btn-success btn-download" value="${file}">下载pdf</a></div>`;
+			$(".download-list").append(str);
+			
+      	}else{
+      		let str = `<div><p>编译失败:${fname}</P><a href=/download/${file} class="btn btn-download" value="${file}">下载日志</a></div>`;
+			$(".download-list").append(str);
+      	}
+      	
+      	
       }
    </script>
-<!--//              <img src="${url}" alt="文件" />-->
 </body>
 </html>

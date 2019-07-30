@@ -43,15 +43,36 @@ def compile_tex(tex_files:list,root_path):
 def get_flist(tid):
     root_path = os.path.join(config.UPLOAD_ROOT_PATH, f"{tid}")
     output_path = os.path.join(root_path, config.BUILD_DIR_NAME)
-    fs = os.listdir(output_path)
-    pdfs = [os.path.join(output_path,f) for f in fs if f.endswith("pdf")]
+    log_path = os.path.join(root_path,config.LOG_DIR_NAME)
 
-    return pdfs
+    fs = os.listdir(output_path)
+    pdfs = []
+    errfs = []
+
+    for f in fs:
+        if f.endswith("pdf"):
+            pdfs.append(f)
+
+    for f in fs:
+        if f.endswith("res"):
+            fpre,_ = os.path.splitext(f)
+            pdf = f"{fpre}.pdf"
+            if pdf not in pdfs: # 编译未通过
+                logf = os.path.join(log_path,f"{fpre}.txt")
+                errfs.append(logf)
+
+    pdfs = [os.path.join(output_path,f) for f in pdfs]
+    errfs = [os.path.join(log_path,f) for f in errfs]
+
+    pdfs = [os.path.relpath(f,config.UPLOAD_ROOT_PATH) for f in pdfs]
+    errfs = [os.path.relpath(f,config.UPLOAD_ROOT_PATH) for f in errfs]
+
+    return pdfs,errfs
 
 def check_compile(tid):
     root_path = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}")
     output_path = os.path.join(root_path,config.BUILD_DIR_NAME)
     fs = os.listdir(output_path)
-    pdfs = [f for f in fs if f.endswith("pdf")]
+    pdfs = [f for f in fs if f.endswith("res")]
     flafs = [f for f in fs if f.endswith("flag")]
     return len(pdfs) == len(flafs)

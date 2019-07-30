@@ -15,3 +15,6 @@ texliveonfly file1.tex file2.tex -r True -c pdflatex
 ```
 > -r为编译完成后自动删除过程文件，默认为False
 > -c为指定编译器，为了支持中文我更改了默认选项，默认为xelatex
+
+## TODOs
+[] 增加更多的检测机制，分步骤：安装、更换texliveonfly.py
