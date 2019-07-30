@@ -80,20 +80,7 @@
           <div class="up-area">
             <input type="file" style="display:none;" id="fileDrag" name="fileDragselect" multiple>
             <div class="row list-drag">
-              
-              	<!--<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>
-              	<p>123</p>-->
-              
+            	
             </div>
           </div>
           <button type="button" class="btn btn-success" id="btn-clear">清空</button>
@@ -135,6 +122,17 @@
 			clearFile();
 			
 		})
+		
+	 function check_compile_over(tid){
+ 		$.ajax({
+		    url: "/check/${tid}",
+		    type: "GET",
+		    success: function(data) {
+		        console.log(data);
+		    }
+		});
+	 }
+	
      $('#btn').click( () => {
        
        	xhr = new XMLHttpRequest();
@@ -145,6 +143,12 @@
   		  	if(xhr.readyState === xhr.DONE) {
 	      		if(xhr.status === 200){ // 请求成功
 		        	console.log(xhr.response);
+		        	tid = xhr.response;
+		        	//查询编译是否完成
+		        	window.setInterval(function(){
+		        		check_compile_over(tid);
+		        	
+		        	},500);
 			      // console.log(JSON.parse(xhr.responseText));
 			      // console.log(xhr.upload);
 			      

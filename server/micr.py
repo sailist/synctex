@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import os,time,config
-import subprocess
-from flask import Flask, request, url_for, send_from_directory,render_template
+import tools
+from flask import Flask, request, send_from_directory,render_template
 from werkzeug.utils import secure_filename
+
+from tools import compile_tex
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif',"tex","ttc"])
 
@@ -25,32 +27,23 @@ html = '''
 def allowed_file(filename):
     return True
 
+@app.route('/check/<tid>')
+def check_file(tid):
+    return f"{tools.check_compile(tid)}"
+
+@app.route("/download/<tid>/<filename>", methods=['GET'])
+def download_file(tid,filename):
+    # 需要知道2个参数, 第1个参数是本地目录的path, 第2个参数是文件名(带扩展名)
+    directory = os.getcwd()  # 假设在当前目录
+    directory = os.path.join(config.UPLOAD_ROOT_PATH,tid,filename)
+    return send_from_directory(directory, filename, as_attachment=True)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     print(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
-def compile_tex(tex_files:list,root_path):
-    output_path = os.path.join(root_path,"build")
-    log_path = os.path.join(root_path,"log")
-    os.makedirs(output_path,exist_ok=True)
-    os.makedirs(log_path,exist_ok=True)
 
-    params = ["texliveonfly",]
-    for tex_file in tex_files:
-        relpath = os.path.relpath(tex_file,output_path)
-        params.append(relpath)
-    params.extend(["-r","True"])
-
-    shell = " ".join(params)
-    flog = open(os.path.join(log_path,"log.txt"),"w",encoding="utf-8")
-    pipe = subprocess.Popen(shell, shell=True,stdout=flog,cwd=output_path)
-
-
-
-def check_compile_done():
-    pass
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -71,7 +64,7 @@ def upload_file():
                     tex_file_list.append(absfname)
                 print(absfname)
                 file.save(absfname)
-        compile_tex(tex_file_list,root_path)
+        compile_tex(tex_file_list, root_path)
 
         return f"{tid}"
     return html

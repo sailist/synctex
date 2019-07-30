@@ -65,6 +65,18 @@ clean_type = ["aux", "nav", "snm", "blg", "bbl",
               "fdb_latexmk", "gz"]
 
 
+def flag_returncode(filename,return_code=None):
+    if return_code is None:
+        return_code = 500
+    _, fname = os.path.split(filename)
+    fpre, ext = os.path.splitext(fname)
+    path = os.getcwd()
+    with open(os.path.join(path,"{}.res").format(fpre),"w") as w:
+        w.write("{}".format(return_code))
+
+
+
+
 def clear_addtion(filename):
     # print(f"============[Info]{filename}")
     _, fname = os.path.split(filename)
@@ -429,6 +441,7 @@ if __name__ == '__main__':
 
         if options.remove_addtion:
             clear_addtion(texDoc)
+            flag_returncode(texDoc,returnCode)
 
         # TODO add some code
     exitScript(returnCode)
