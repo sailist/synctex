@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+	
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>文件上传</title>
+  <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+  <style>
+
+    body,html{
+      margin: 0 auto;
+    }
+    .up-header {
+      width:600px;
+      text-align: center;
+    }
+    .up-content {
+      min-height: 200px;
+      border: 1px solid #CCCCCC;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #FAFAFA;
+      color: #999;
+      font-size: 20px;
+      text-align: center;
+    }
+    .up-area {
+      border: 2px dashed #ccc;
+      margin: 10px 20px 20px 20px;
+      width: 75%;
+      min-height: 200px;
+      /*line-height: 20px;*/
+      background-color: #fff;
+    }
+    .list-group {
+      margin: 0px auto;;
+      width: 200px;
+      min-height: 100px;
+      padding: 1px;
+    }
+    img {
+      max-width: 100%;
+    }
+    .btn {
+
+    }
+    .close {
+      margin-left: 550px;
+      margin-top: -20px;
+    }
+
+	.row{
+		text-align: left;
+		margin-left: 10px;
+	}
+  </style>
+</head>
+<body>
+
+
+  <header id="header" class="page-header">
+    <!-- 头部显示 -->
+    <div class="container upload ">
+      <div class="up-header center-block">
+        <h2 >LaTex自动编译</h2>
+        <!--<div class="input-group"  style="width:600px; display:flex;">
+    			<input type="text" class="form-control" placeholder="在此处粘贴图片网址">
+    			<button type="button" class="btn btn-primary">上传图片</button>
+		    </div>-->
+      </div>
+      <div class="row">
+        <!-- 拖拽图片到这来 -->
+        <div class="up-content  dragFile">
+          <p style="margin-top:10px;">拖拽文件到这里，如果有图片，确保是图片和.tex文件同级或者位于其子目录下（且文件中是相对路径）</p>
+          <div class="up-area">
+            <input type="file" style="display:none;" id="fileDrag" name="fileDragselect" multiple>
+            <div class="row list-drag">
+              
+              	<!--<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>
+              	<p>123</p>-->
+              
+            </div>
+          </div>
+          <button type="button" class="btn btn-success" id="btn-clear">清空</button>
+		  <button type="button" class="btn btn-success" id="btn">编译</button>
+        </div>
+        
+        
+      </div>
+    </div>
+  </header>
+
+   <script type="text/javascript">
+     //点击本地上传文件
+     constfiles = [];
+     function traverseFileTree(item, path) {
+			  path = path || "";
+			  if (item.isFile) {
+			    // Get file
+			    console.log(item);
+			    item.file(function(file) {
+			    	file.RelativePath = path;
+			    	constfiles[constfiles.length] = file;
+			      console.log("File:", path + file.name);
+			      appendFile(path + file.name);
+			    });
+			  } else if (item.isDirectory) {
+			    // Get folder contents
+			    var dirReader = item.createReader();
+			    dirReader.readEntries(function(entries) {
+			      for (var i=0; i<entries.length; i++) {
+			        traverseFileTree(entries[i], path + item.name + "/");
+			      }
+			    });
+			  }
+			}
+			     
+		$('#btn-clear').click(()=>{
+			
+			clearFile();
+			
+		})
+     $('#btn').click( () => {
+       
+       	xhr = new XMLHttpRequest();
+	    xhr.open("post", "/", true);
+	    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		
+		xhr.onreadystatechange = function () {
+  		  	if(xhr.readyState === xhr.DONE) {
+	      		if(xhr.status === 200){ // 请求成功
+		        	console.log(xhr.response);
+			      // console.log(JSON.parse(xhr.responseText));
+			      // console.log(xhr.upload);
+			      
+			        //console.log(xhr.responseXML);
+			      //console.log(xhr.responseURL);
+			      //console.log(xhr.status);
+			      //console.log(xhr.statusText);
+			      //console.log('Content-Type:',xhr.getResponseHeader('Content-Type'));
+			      //console.log(xhr.responseURL);
+			      //console.log(xhr.getAllResponseHeaders());    
+			      }else{ // 请求失败
+			          console.log(xhr.response);
+			      }
+			    
+			  }
+		};
+		
+	    var fd = new FormData();
+	    for(i = 0;i<constfiles.length;i++)
+	    {
+				fd.append('file', constfiles[i],constfiles[i].RelativePath+constfiles[i].name);		    	
+	    }
+	    xhr.send(fd);
+       	
+       	
+       	
+     })
+
+     //拖拽上传文件 在页面进行预览 上传form用到ajax
+      const dragbox = document.querySelector('.dragFile');
+      dragbox.addEventListener('dragover', function (e) {
+          e.preventDefault(); // 必须阻止默认事件
+      }, false);
+      dragbox.addEventListener('drop', function (e) {
+      		event.preventDefault();
+			
+				  var items = event.dataTransfer.items;
+				  for (var i=0; i<items.length; i++) {
+				    // webkitGetAsEntry is where the magic happens
+				    var item = items[i].webkitGetAsEntry();
+				    if (item) {
+				      traverseFileTree(item);
+				    }
+				  }
+      }, false);
+		
+		function clearFile(){
+			constfiles = [];
+			$(".list-drag").children().remove();	
+			
+		}
+		
+      function appendFile (file) {
+      	let str = `<p>${file}</p>`;
+      	
+      	$(".list-drag").append(str);
+//      for( file of files ) {
+//      	constfiles[constfiles.length] = file;
+//        let url = window.URL.createObjectURL(file);
+//        let liStr = `
+//          <li class="list-group-item">
+//            <div>
+//            	<p>"${file.name}"</p>
+//
+//            </div>
+//          </li>
+//        `;
+//        $(listName).append(liStr);
+//      }
+      }
+   </script>
+<!--//              <img src="${url}" alt="文件" />-->
+</body>
+</html>
