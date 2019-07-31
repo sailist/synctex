@@ -1,4 +1,5 @@
 import subprocess,threading,sys,os,config
+import json
 
 def popenAndCall(args, shell=True,stdout=sys.stdout,cwd=os.getcwd(),onExit=None):
     """
@@ -20,7 +21,7 @@ def popenAndCall(args, shell=True,stdout=sys.stdout,cwd=os.getcwd(),onExit=None)
 
 
 def compile_tex(tex_files:list,root_path):
-    output_path = os.path.join(root_path,config.BUILD_DIR_NAME)
+    output_path = os.path.join(root_path)
     log_path = os.path.join(root_path,"log")
     os.makedirs(output_path,exist_ok=True)
     os.makedirs(log_path,exist_ok=True)
@@ -38,7 +39,30 @@ def compile_tex(tex_files:list,root_path):
         params.extend(["-r","True"])
         shell = " ".join(params)
         flog = open(os.path.join(log_path,f"{fpre}.txt"),"w",encoding="utf-8")
-        pipe = subprocess.Popen(shell, shell=True,stdout=flog,cwd=output_path)
+
+        subprocess.Popen(shell, shell=True,stdout=flog,cwd=output_path)
+
+def get_flist2(tid):
+    log_file_path = os.path.join(config.UPLOAD_ROOT_PATH, f"{tid}","build.log")
+
+    jstr = json.load(open(log_file_path,"r"))
+    pdfs = []
+    errfs = []
+    for fpath,res in jstr.items():
+        path,fname = os.path.split(fpath)
+        fpre,_ = os.path.splitext(fname)
+        if res == 1:
+            errlog_file = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}",config.LOG_DIR_NAME,f"{fpre}.txt")
+            errfs.append(errlog_file)
+            if os.path.exists(fpath):
+                pdfs.append(fpath)
+        else:
+            pdfs.append(fpath)
+
+    pdfs = [os.path.relpath(f,config.UPLOAD_ROOT_PATH) for f in pdfs]
+    errfs = [os.path.relpath(f,config.UPLOAD_ROOT_PATH) for f in errfs]
+
+    return pdfs,errfs
 
 def get_flist(tid):
     root_path = os.path.join(config.UPLOAD_ROOT_PATH, f"{tid}")
@@ -70,9 +94,6 @@ def get_flist(tid):
     return pdfs,errfs
 
 def check_compile(tid):
-    root_path = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}")
-    output_path = os.path.join(root_path,config.BUILD_DIR_NAME)
-    fs = os.listdir(output_path)
-    pdfs = [f for f in fs if f.endswith("res")]
-    flafs = [f for f in fs if f.endswith("flag")]
-    return len(pdfs) == len(flafs)
+    flag_path = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}","1")
+    return os.path.exists(flag_path)
+

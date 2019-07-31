@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os,json
 
 # default options; feel free to change!
 defaultCompiler = "xelatex"
@@ -353,6 +353,8 @@ def generateCompiler(compiler, arguments, texDoc, exiter):
 ### MAIN PROGRAM ###
 
 if __name__ == '__main__':
+    if os.path.exists("1"):
+        os.remove("1")
     # Parse command line
     parser = optparse.OptionParser(
         usage="\n\n\t%prog [options] file.tex\n\nUse option --help for more info.",
@@ -371,6 +373,7 @@ if __name__ == '__main__':
                       help='arguments to pass to compiler; default is: "{0}"'.format(defaultArguments),
                       default=defaultArguments)
     parser.add_option("-r","--remove",dest="remove_addtion",default = False)
+    parser.add_option("-p","--patch",dest="patch_file",default = False)
     parser.add_option('--texlive_bin', dest='texlive_bin', metavar='LOCATION',
                       help='Custom location for the TeX Live bin folder', default="")
     parser.add_option('--terminal_only', action="store_true", dest='terminal_only', default=False,
@@ -387,9 +390,24 @@ if __name__ == '__main__':
 
     texDocs = args
     compiler_path = os.path.join(options.texlive_bin, options.compiler)
+
+    cur_dir = os.getcwd()
+    pdfpaths = {}
+
     for texDoc in texDocs:
+        os.chdir(cur_dir)
+        absDocPath = os.path.abspath(texDoc)
+        docDirPath,docName = os.path.split(absDocPath)
+        os.chdir(docDirPath)
+
+        texDocName = docName
+        namePre,_ = os.path.splitext(texDocName)
+
+        pdfName = os.path.join(docDirPath,namePre+".pdf")
+
+
         (installSpeaker, exitScript) = generateSpeakerFuncs(options.speech_setting)
-        compileTex = generateCompiler(compiler_path, options.arguments, texDoc, exitScript)
+        compileTex = generateCompiler(compiler_path, options.arguments, texDocName, exitScript)
 
         # initializes tlmgr, responds if the program not found
         try:
@@ -417,7 +435,7 @@ if __name__ == '__main__':
             # most reliable: searches for missing file
             filesSearch = re.findall(r"! LaTeX Error: File `([^`']*)' not found", output) + re.findall(
                 r"! I can't find file `([^`']*)'.", output)
-            filesSearch = [name for name in filesSearch if name != texDoc]  # strips our .tex doc from list of files
+            filesSearch = [name for name in filesSearch if name != texDocName]  # strips our .tex doc from list of files
             # next most reliable: infers filename from font error
             fontsFileSearch = [name + ".tfm" for name in re.findall(r"! Font \\[^=]*=([^\s]*)\s", output)]
             # brute force search for font name in files
@@ -441,9 +459,14 @@ if __name__ == '__main__':
         compileTex() # compile twice for cross-ref item
 
         if options.remove_addtion:
-            clear_addtion(texDoc)
-            flag_returncode(texDoc,returnCode)
+            clear_addtion(texDocName)
 
-        # TODO add some code
+        pdfpaths[pdfName] = returnCode
+
+    os.chdir(cur_dir)
+    with open("build.log","w") as w:
+        w.write(json.dumps(pdfpaths))
+
+    open("1","w").close()
     exitScript(returnCode)
 

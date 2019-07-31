@@ -37,7 +37,7 @@ def check_file(tid):
 
 @app.route('/update/<tid>')
 def get_flist(tid):
-    pdfs,errfs = tools.get_flist(tid)
+    pdfs,errfs = tools.get_flist2(tid)
 
     return jsonify(dict(
         success=pdfs,
@@ -46,7 +46,7 @@ def get_flist(tid):
 
 @app.route('/directly/<tid>',methods=["GET","POST"])
 def direct_download(tid):
-    pdfs,errfs = tools.get_flist(tid)
+    pdfs,errfs = tools.get_flist2(tid)
 
     print("hello")
     memory_file = BytesIO()
