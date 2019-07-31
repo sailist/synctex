@@ -8,10 +8,52 @@
 
 ## 使用方法
 ```bash
-git clone 
+git clone https://github.com/sailist/synctex
+cd synctex
 ```
 
 ### 部署Linux
-如果未部署Texlive，
+如果未部署Texlive，可以通过`installatexlive`目录下的脚本部署
+
+```bash
+cd installlatexlive
+sudo bash ./install.bash 
+```
+
+如果已经部署Texlive，需要安装texliveonfly来确保遇到未安装的包时可以自动安装
+```bash
+cd installlatexlive
+tlmgr install texliveonfly
+sudo cp texliveonfly.py /usr/local/texlive/2019/texmf-dist/scripts/texliveonfly/texliveonfly.py
+``` 
+
+> 最后一步复制是我更改后的脚本文件，增添了自动删除编译过程文件和多文件同时编译以及在目录下生成编译结果文件的命令，在本项目中需要用到，否则可能运行过程会出错
+
+所有步骤完成后，尝试运行
+```bash
+cd installlatexlive
+texliveonfly test.tex -r True
+```
+如果能在目录下生成pdf，则说明一切安装成功
 
 ### 服务端使用方法
+安装依赖：
+```bash
+pip install flask
+```
+
+在确保部署TexLive和texliveonfly成功，并且运行上一步最后的测试无误后，在config.py中，更改服务器的连接url，随后运行
+```bash
+python3 run_server.py
+```
+
+### 客户端使用方法
+安装依赖：
+```bash
+pip install watchdog
+```
+
+在config.py中修改连接服务器的ip和端口，然后运行
+```bash
+python3 run_client.py
+```

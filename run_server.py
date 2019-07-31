@@ -1,3 +1,4 @@
 from server.micr import run
+import config
 
-run("0.0.0.0",5000)
+run(config.HOST,config.IP)

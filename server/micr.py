@@ -105,4 +105,4 @@ def upload_dragfile():
     return render_template("uploadFiles.html")
 
 def run(host = "0.0.0.0",port=5000):
-    app.run(host=host,port=port,debug=True)
+    app.run(host=host,port=port)

@@ -139,8 +139,8 @@ class TexDirSyncTool():
             bf = BytesIO(uf.content)
 
             with zipfile.ZipFile(bf,"r") as zf:
-                save_path = os.path.join(self.root_path, "build")
-                log_path = os.path.join(self.root_path,"log")
+                save_path = os.path.join(self.root_path, config.BUILD_DIR_NAME)
+                log_path = os.path.join(self.root_path,config.LOG_DIR_NAME)
                 os.makedirs(save_path, exist_ok=True)
                 os.makedirs(log_path, exist_ok=True)
                 namelist = zf.namelist()
@@ -181,7 +181,7 @@ class DirManager():
 
     def run(self):
         self.syncpaths = config.WATCH_DIR
-        self.host = config.HOST
+        self.host = config.SERVER_HOST
         self.observers = []
         for path in self.syncpaths:
             print(f"[info*]start observer {path}")
