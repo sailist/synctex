@@ -8,7 +8,7 @@ from flask import Flask, request, send_from_directory,render_template,send_file,
 from flask import jsonify
 from werkzeug.utils import secure_filename
 
-from tools import compile_tex
+from tools import compile_tex,convert_markdown
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif',"tex","ttc"])
 
@@ -85,18 +85,28 @@ def uploaded_file():
     tid = int(time.time())
     root_path = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}")
     tex_file_list = []
+    md_file_list = []
     for file in files:
         if file and allowed_file(file.filename):
             relepath,fname = os.path.split(file.filename)
             abspath = os.path.join(root_path,relepath)
             os.makedirs(abspath,exist_ok=True)
 
-            fname = secure_filename(fname)
+            # fname = secure_filename(fname)
             absfname = os.path.join(root_path,relepath,fname)
+            file.save(absfname)
+
+            if absfname.endswith("md"):
+                md_file_list.append(absfname)
+
             if absfname.endswith("tex"):
                 tex_file_list.append(absfname)
             print(absfname)
-            file.save(absfname)
+
+    for md_file in md_file_list:
+        relepath = os.path.split(md_file)[0]
+        absfname = convert_markdown(md_file, relepath)
+        tex_file_list.append(absfname)
     compile_tex(tex_file_list, root_path)
     return f"{tid}"
 

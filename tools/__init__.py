@@ -97,3 +97,15 @@ def check_compile(tid):
     flag_path = os.path.join(config.UPLOAD_ROOT_PATH,f"{tid}","1")
     return os.path.exists(flag_path)
 
+
+
+def convert_markdown(file,output):
+    from marktex.texrender.toTex import MarkTex
+
+    doc = MarkTex.convert_file(file,output_dir=output)
+    path,fname = os.path.split(file)
+    fpre,_ = os.path.splitext(fname)
+    doc.generate_tex(fpre)
+
+    texfpath = os.path.join(path,f"{fpre}.tex")
+    return texfpath
